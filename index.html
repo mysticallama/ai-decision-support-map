@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Statecraft AI Tools Map</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Interactive map of AI tools and programs governments, frontier labs and defense firms use for negotiation, intelligence analysis, wargaming and budget decisions.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600&display=swap">
+<style>
+/* Layout: a working research map. Header with bottom line, then the network as the main instrument with a details pane, then patterns, index and sources. */
+:root {
+  --bg: #f3f5f8;
+  --surface: #ffffff;
+  --ink: #142033;
+  --muted: #586579;
+  --line: #d4dae3;
+  --edge: #a9b3c2;
+  --accent: #1d5fa8;
+  --hub: #142033;
+  --hub-text: #ffffff;
+  --c-gov: #2b6cb0;
+  --c-research: #23825f;
+  --c-lab: #c1561b;
+  --c-industry: #7547ad;
+  --c-reference: #98801a;
+  --f-display: "IBM Plex Serif", Georgia, "Times New Roman", serif;
+  --f-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1520; --surface: #161e2b; --ink: #e4e9f1; --muted: #9aa6b8; --line: #2a3546; --edge: #4a576b;
+    --accent: #7fb0ea; --hub: #e4e9f1; --hub-text: #0f1520;
+    --c-gov: #6aa5e6; --c-research: #4fc196; --c-lab: #ef8c55; --c-industry: #ac8be0; --c-reference: #d3b84a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1520; --surface: #161e2b; --ink: #e4e9f1; --muted: #9aa6b8; --line: #2a3546; --edge: #4a576b;
+  --accent: #7fb0ea; --hub: #e4e9f1; --hub-text: #0f1520;
+  --c-gov: #6aa5e6; --c-research: #4fc196; --c-lab: #ef8c55; --c-industry: #ac8be0; --c-reference: #d3b84a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55; }
+.wrap > * { min-width: 0; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 56px; display: grid; gap: 40px; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(28px, 4vw, 40px); line-height: 1.15; margin: 6px 0 14px; text-wrap: balance; }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: 24px; line-height: 1.25; margin: 0 0 12px; text-wrap: balance; }
+header .bluf { max-width: 68ch; font-size: 17px; margin: 0; }
+header .bluf b { font-weight: 600; }
+header .meta { margin-top: 12px; color: var(--muted); font-size: 13px; }
+
+/* Map */
+.mapgrid { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; align-items: start; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 10px; }
+.group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.group > span { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-right: 2px; }
+.chip { font: 500 13px/1 var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 11px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chip[aria-pressed="false"] { color: var(--muted); background: transparent; text-decoration: line-through; text-decoration-color: var(--edge); }
+.chip .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+.chip[aria-pressed="false"] .dot { opacity: .35; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; }
+.seg button { font: 500 13px/1 var(--f-body); border: 0; background: transparent; color: var(--muted); padding: 7px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--bg); }
+#q { font: 14px var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 7px 12px; width: 190px; max-width: 100%; }
+.stage { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; height: 760px; overflow: hidden; }
+.stage svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
+.stage .hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted); pointer-events: none; }
+.stage .reset { position: absolute; right: 10px; top: 10px; }
+.link { stroke: var(--edge); stroke-width: 1.1; fill: none; }
+.link.provider { stroke-dasharray: 3 3; }
+.node circle { stroke: var(--surface); stroke-width: 2; cursor: pointer; }
+.node.hub circle { fill: var(--hub); stroke: var(--surface); }
+.node text { font-family: var(--f-body); font-size: 11.5px; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3.5px; stroke-linejoin: round; pointer-events: none; }
+.node.hub text { font-family: var(--f-mono); font-size: 11px; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; }
+.dim { opacity: .12; }
+.node.sel circle { stroke: var(--ink); stroke-width: 2.5; }
+.link.hot { stroke: var(--ink); stroke-width: 1.6; opacity: .85; }
+
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px; min-height: 200px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); }
+.panel h3 { font-family: var(--f-display); font-size: 20px; font-weight: 600; margin: 4px 0 6px; line-height: 1.25; text-wrap: balance; }
+.panel .who { color: var(--muted); font-size: 13px; margin: 0 0 10px; }
+.panel p { margin: 0 0 10px; }
+.panel .status { font-size: 13px; border-top: 1px solid var(--line); padding-top: 10px; }
+.panel .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0 12px; }
+.tag { font-family: var(--f-mono); font-size: 11px; letter-spacing: .03em; border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; color: var(--muted); }
+.tag.actor { color: var(--surface); border-color: transparent; }
+.panel ul { margin: 6px 0 0; padding-left: 18px; font-size: 13px; }
+.panel .links button { font: inherit; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.panel .empty { color: var(--muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); margin-top: 10px; }
+.legend i { display: inline-block; width: 18px; border-top: 1.5px solid var(--edge); vertical-align: middle; margin-right: 6px; }
+.legend i.d { border-top-style: dashed; }
+
+/* Matrix */
+.tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th, td { text-align: left; vertical-align: top; padding: 10px 12px; border-bottom: 1px solid var(--line); }
+th { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+tr:last-child td { border-bottom: 0; }
+.matrix td:first-child { font-weight: 600; width: 16%; }
+.matrix td { min-width: 170px; }
+.matrix button { font: inherit; text-align: left; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; display: block; margin-bottom: 4px; text-decoration: underline; text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent); text-underline-offset: 2px; }
+.matrix .none { color: var(--muted); font-style: italic; }
+.lede { margin: -4px 0 12px; color: var(--muted); max-width: 70ch; }
+.framing .grp td { font-family: var(--f-mono); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--bg); font-weight: 500; }
+.framing td.ask { color: var(--muted); }
+.framing td.gap { min-width: 260px; }
+.framing tr.empty td.gap { color: var(--ink); font-weight: 500; }
+
+.patterns { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px 28px; }
+.patterns article { border-top: 2px solid var(--ink); padding-top: 10px; min-width: 0; }
+.patterns h3 { font-family: var(--f-body); font-size: 15px; font-weight: 600; margin: 0 0 6px; }
+.patterns p { margin: 0; color: var(--ink); font-size: 14.5px; }
+.sources ol { columns: 2 380px; column-gap: 32px; padding-left: 22px; margin: 0; font-size: 13.5px; }
+.sources li { break-inside: avoid; margin-bottom: 6px; }
+.sources .o { color: var(--muted); }
+footer { color: var(--muted); font-size: 13px; border-top: 1px solid var(--line); padding-top: 14px; }
+
+@media (max-width: 900px) {
+  .mapgrid { grid-template-columns: 1fr; }
+  .panel { position: static; }
+  .stage { height: 520px; }
+}
+@media (max-width: 520px) {
+  .stage { height: 460px; }
+  .node:not(.hub):not(.sel) text { display: none; }
+  #q { width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">AI decision support for negotiation and national security · week 1</div>
+    <h1>Who is using AI to prepare decisions of state</h1>
+    <p class="bluf"><b>Bottom line.</b> Governments have moved fastest on general-purpose assistants and on military planning and wargaming tools. AI built for negotiation or for public investment choices is mostly prototypes and private-sector analogs, and the State Department is the one foreign ministry we found publicly steering its assistant toward negotiation and policy analysis. Against our framing, nothing covers the after-talks phase or budget-wide stress tests. Most Western deployments rest on a handful of U.S. model developers and integrators, and France and Japan are already hedging with domestic models.</p>
+    <div class="meta">As of <span id="asof"></span>. Public sources only; classified programs are not shown.</div>
+  </header>
+
+  <section aria-labelledby="map-h">
+    <h2 id="map-h">The network</h2>
+    <div class="controls">
+      <div class="group" id="regions"><span>Region</span></div>
+      <div class="group" id="actors"><span>Actor</span></div>
+    </div>
+    <div class="controls">
+      <div class="group"><span>Arrange by</span>
+        <div class="seg" role="group" aria-label="Arrange by">
+          <button type="button" id="by-use" aria-pressed="true">Use-case</button>
+          <button type="button" id="by-region" aria-pressed="false">Region</button>
+        </div>
+      </div>
+      <div class="group"><label for="q" class="eyebrow" style="margin-right:4px">Find</label><input id="q" type="search" placeholder="Thunderforge, DeepSeek…" autocomplete="off"></div>
+    </div>
+    <div class="mapgrid">
+      <div style="min-width:0">
+        <div class="stage" id="stage">
+          <svg id="svg" role="img" aria-label="Network of AI tools and programs linked to use-cases and model providers"></svg>
+          <button type="button" class="chip reset" id="reset">Reset view</button>
+          <div class="hint">Drag nodes, scroll or pinch to zoom, click for details</div>
+        </div>
+        <div class="legend">
+          <span><i></i>serves a use-case</span>
+          <span><i class="d"></i>runs on or is supplied by</span>
+          <span>Dark nodes are use-cases. Node size reflects number of links.</span>
+        </div>
+      </div>
+      <aside class="panel" id="panel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <section aria-labelledby="mx-h">
+    <h2 id="mx-h">The map at a glance</h2>
+    <div class="tablewrap"><table class="matrix" id="matrix"></table></div>
+  </section>
+
+  <section aria-labelledby="fr-h">
+    <h2 id="fr-h">Where the tools sit on our framing</h2>
+    <p class="lede">Each row is a question from the project plan. Empty or thin rows are where the field has the least to show and where our recommendations could matter most.</p>
+    <div class="tablewrap"><table class="matrix framing" id="framing"></table></div>
+  </section>
+
+  <section aria-labelledby="pt-h">
+    <h2 id="pt-h">Patterns and gaps for our project</h2>
+    <div class="patterns" id="patterns"></div>
+  </section>
+
+  <section class="sources" aria-labelledby="src-h">
+    <h2 id="src-h">Sources</h2>
+    <ol id="sources"></ol>
+  </section>
+
+  <footer>Prepared for the AI Decision Support for Negotiation and National Security project. Every entry links to the public source it draws on.</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+const DATA = {"asOf":"November 9, 2026","uses":[{"id":"neg","name":"Negotiation and diplomacy"},{"id":"intel","name":"Intelligence analysis"},{"id":"war","name":"Wargaming and planning"},{"id":"budget","name":"Budget, investment and audit"},{"id":"general","name":"General-purpose assistants"}],"actors":[{"id":"gov","name":"Government program"},{"id":"research","name":"Research or nonprofit"},{"id":"lab","name":"Frontier AI developer"},{"id":"industry","name":"Defense tech or integrator"},{"id":"reference","name":"Non-government analog"}],"regions":[{"id":"US","name":"United States"},{"id":"Allies","name":"Allies and partners"},{"id":"China","name":"China"},{"id":"Intl","name":"International"}],"sources":{"statepb":{"title":"The Department of State Generative AI Playbook","outlet":"U.S. Department of State","date":"July 2026","url":"https://www.state.gov/wp-content/uploads/2026/07/DOS-Generative-AI-Playbook_July-2026.pdf","pages":"pp. 3, 28, 33-34"},"adst":{"title":"Negot[AI]tor","outlet":"Association for Diplomatic Studies and Training","date":"accessed November 9, 2026","url":"https://adst.org/negotaitor/"},"csis":{"title":"Strategic Headwinds: Understanding the Forces Shaping Ukraine's Path to Peace","outlet":"CSIS Futures Lab","date":"accessed November 9, 2026","url":"https://www.csis.org/programs/futures-lab/projects/strategic-headwinds-understanding-forces-shaping-ukraines-path-peace"},"dsgenai":{"title":"Grok and ChatGPT join Gemini in Pentagon's enterprise genAI portal","outlet":"DefenseScoop (Brandi Vincent)","date":"August 31, 2026","url":"https://defensescoop.com/2026/08/31/grok-chatgpt-added-to-genai-mil/"},"dowstrat":{"title":"Artificial Intelligence Strategy for the Department of War","outlet":"U.S. Department of War","date":"January 9, 2026","url":"https://www.afacpo.com/mpm/wp-content/uploads/2026/01/ARTIFICIAL-INTELLIGENCE-STRATEGY-FOR-THE-DEPARTMENT-OF-WAR.pdf"},"hk":{"title":"Department of War's Artificial Intelligence-First Agenda: A New Era for Defense Contractors","outlet":"Holland & Knight","date":"February 2026","url":"https://www.hklaw.com/en/insights/publications/2026/02/department-of-wars-ai-first-agenda-a-new-era-for-defense-contractors"},"dsthunder":{"title":"Combatant commands to get new generative AI tech for operational planning, wargaming","outlet":"DefenseScoop (Jon Harper)","date":"March 5, 2025","url":"https://defensescoop.com/2025/03/05/diu-thunderforge-scale-ai-combatant-commands-indopacom-eucom/"},"advmemo":{"title":"Transforming Advana to Accelerate Artificial Intelligence and Enhance Auditability","outlet":"Deputy Secretary of War memorandum","date":"January 9, 2026","url":"https://www.afacpo.com/mpm/wp-content/uploads/2026/01/TRANSFORMING-ADVANA-TO-ACCELERATE-ARTIFICIAL-INTELLIGENCE-AND-ENHANCE-AUDITABILITY.pdf"},"dsaudit":{"title":"Pentagon to lean on AI to achieve audit goals","outlet":"DefenseScoop (Jon Harper)","date":"May 5, 2026","url":"https://defensescoop.com/2026/05/05/pentagon-plans-to-use-ai-for-audits/"},"cdao":{"title":"CDAO Announces Partnerships with Frontier AI Companies to Address National Security Mission Areas","outlet":"Chief Digital and Artificial Intelligence Office","date":"July 14, 2025","url":"https://www.ai.mil/Latest/News-Press/PR-View/Article/4242822/cdao-announces-partnerships-with-frontier-ai-companies-to-address-national-secu/"},"donovan":{"title":"Report on Scale AI's $100M CDAO agreement for Donovan","outlet":"GovCon Wire (Elodie Collins)","date":"September 18, 2025","url":"https://www.govconwire.com/articles/scale-ai-dod-ota-agreement-donovan-gen-ai"},"apl":{"title":"GenWar Sim","outlet":"Johns Hopkins Applied Physics Laboratory","date":"accessed November 9, 2026","url":"https://www.jhuapl.edu/work/projects-and-missions/genwar-sim"},"iarpa":{"title":"REASON: Rapid Explanation, Analysis and Sourcing Online","outlet":"IARPA","date":"accessed November 9, 2026","url":"https://www.iarpa.gov/research-programs/reason"},"cia":{"title":"CIA plans for 'AI coworkers', deputy director says","outlet":"Nextgov/FCW","date":"April 9, 2026","url":"https://www.nextgov.com/artificial-intelligence/2026/04/cia-plans-ai-coworkers-deputy-director-says/412744/"},"humphrey":{"title":"Shake-up of tech and AI usage across NHS and other public services to deliver Plan for Change","outlet":"GOV.UK","date":"January 21, 2025","url":"https://www.gov.uk/government/news/shake-up-of-tech-and-ai-usage-across-nhs-and-other-public-services-to-deliver-plan-for-change"},"dip":{"title":"The Defence Investment Plan","outlet":"UK Ministry of Defence","date":"June 2026","url":"https://assets.publishing.service.gov.uk/media/6a43f5bb1a04d4dae8b81536/The_Defence_Investment_Plan.pdf","pages":"pp. 33-34"},"nato":{"title":"NATO Finalizes Rapid Procurement of AI Warfighting Platform","outlet":"The Defense Post","date":"April 16, 2025","url":"https://www.thedefensepost.com/2025/04/16/nato-palantir-ai-warfighting-platform"},"japan":{"title":"Japan Mulls Use of Domestic AI in SDF Command System","outlet":"Jiji Press via Nippon.com","date":"August 10, 2026","url":"https://www.nippon.com/en/news/yjj2026081000706/"},"france":{"title":"France's armed forces ministry awards Mistral AI framework agreement","outlet":"Reuters via The Star","date":"January 8, 2026","url":"https://www.thestar.com.my/tech/tech-news/2026/01/08/france039s-armed-forces-ministry-awards-mistral-ai-framework-agreement"},"nbim":{"title":"Norway wealth fund moves towards some AI-driven decisions but with humans in control","outlet":"Reuters via The Star","date":"March 24, 2026","url":"https://www.thestar.com.my/tech/tech-news/2026/03/24/norway-wealth-fund-moves-towards-some-ai-driven-decisions-but-with-humans-in-control"},"pla":{"title":"Robot dogs and AI drone swarms: How China could use DeepSeek for an era of war","outlet":"Reuters via bdnews24","date":"October 28, 2025","url":"https://bdnews24.com/world/8a36d98a5496"},"jamlocal":{"title":"PRC Deploys DeepSeek Across Local Governments","outlet":"Jamestown Foundation (Lea Thome)","date":"March 28, 2025","url":"https://jamestown.org/prc-deploys-deepseek-across-local-governments/"},"bkk":{"title":"Chinese officials told to use DeepSeek AI to help make decisions","outlet":"Bangkok Post","date":"2025","url":"https://bangkokpost.com/life/tech/2964933/local-officials-in-china-told-to-use-deepseek-ai-to-help-them-make-decisions"},"jamwar":{"title":"Learning Without Fighting: New Developments in PLA Artificial Intelligence War-Gaming","outlet":"Jamestown Foundation, China Brief Vol. 19, Issue 7","date":"2019","url":"https://jamestown.org/program/learning-without-fighting-new-developments-in-pla-artificial-intelligence-war-gaming/"},"estonia":{"title":"Chinese artificial intelligence distorts perceptions","outlet":"Estonian Foreign Intelligence Service, International Security and Estonia 2026","date":"2026","url":"https://raport.valisluureamet.ee/2026/en/6-asia/6-3-chinese-artificial-intelligence-distorts-perceptions/"},"dppa":{"title":"Innovation","outlet":"UN Department of Political and Peacebuilding Affairs","date":"accessed November 9, 2026","url":"https://dppa.un.org/en/dppa/innovation"},"csa":{"title":"Walmart automates supplier negotiations","outlet":"Chain Store Age","date":"accessed November 9, 2026","url":"https://chainstoreage.com/walmart-automates-supplier-negotiations"},"hbr":{"title":"How Walmart Automated Supplier Negotiations","outlet":"Harvard Business Review","date":"November 2022","url":"https://hbr.org/2022/11/how-walmart-automated-supplier-negotiations"},"claudegov":{"title":"Anthropic drops Claude Gov for natsec customers, hastening the public sector AI race","outlet":"FedScoop","date":"June 5, 2025","url":"https://fedscoop.com/anthropic-drops-claude-gov-for-natsec-customers-hastening-the-public-sector-ai-race/"},"palantir":{"title":"US Army pools contracts into up to $10 billion Palantir deal","outlet":"Reuters via The Star","date":"August 1, 2025","url":"https://www.thestar.com.my/tech/tech-news/2025/08/01/us-army-pools-contracts-into-up-to-10-billion-palantir-deal"},"statepb28":{"title":"The Department of State Generative AI Playbook","outlet":"U.S. Department of State","date":"July 2026","url":"https://www.state.gov/wp-content/uploads/2026/07/DOS-Generative-AI-Playbook_July-2026.pdf","pages":"p. 28"},"statepb29":{"title":"The Department of State Generative AI Playbook","outlet":"U.S. Department of State","date":"July 2026","url":"https://www.state.gov/wp-content/uploads/2026/07/DOS-Generative-AI-Playbook_July-2026.pdf","pages":"pp. 28-29"},"statepb37":{"title":"The Department of State Generative AI Playbook","outlet":"U.S. Department of State","date":"July 2026","url":"https://www.state.gov/wp-content/uploads/2026/07/DOS-Generative-AI-Playbook_July-2026.pdf","pages":"pp. 37-38"},"statepb34":{"title":"The Department of State Generative AI Playbook","outlet":"U.S. Department of State","date":"July 2026","url":"https://www.state.gov/wp-content/uploads/2026/07/DOS-Generative-AI-Playbook_July-2026.pdf","pages":"p. 34"}},"nodes":[{"id":"statechat","name":"StateChat and FAMsearch","who":"U.S. Department of State","actor":"gov","region":"US","uses":["general","neg"],"desc":"Sensitive But Unclassified enterprise chatbot, funded through GSA's Technology Modernization Fund. Users mostly draft communications, proofread and research; 90% of regular users report saving time, about 1.6 hours per week per task. FAMsearch answers questions from the 30,000-page Foreign Affairs Manual with citations, and the playbook describes agents that will flag guidance and check related cables while an officer drafts. The top complaint from users who see no benefit is that verifying outputs takes longer than doing the task.","status":"In use. Over 62,000 users at 98% of posts as of June 2026 (p. 3); the epilogue gives 60,000+ at 92% (p. 34). About 19,000 weekly users out of an 80,000-person workforce.","sources":["statepb"],"short":"StateChat","links":[]},{"id":"premortem","name":"Pre-mortem analysis tool","short":"State pre-mortem tool","who":"U.S. Department of State (inside StateChat)","actor":"gov","region":"US","uses":["neg","budget"],"desc":"A specialized policy tool inside StateChat that helps users stress-test policy proposals. The playbook presents it as the start of moving StateChat from drafting and summarizing to 'negotiations and policy analysis.'","status":"Described in the July 2026 playbook; usage figures not given.","sources":["statepb28"],"links":["statechat"]},{"id":"northstar","name":"Northstar","who":"State Bureau of Global Public Affairs","actor":"gov","region":"US","uses":["neg","intel"],"desc":"AI media analytics across 100,000+ sources in 100+ languages, adding about one million news and social media items a day, translated and summarized in near real time. Useful for reading the other side's domestic politics and public signals.","status":"In use.","sources":["statepb37"]},{"id":"smart","name":"SMART AI","who":"U.S. Department of State","actor":"gov","region":"US","uses":["neg","general"],"desc":"The Messaging and Archive Retrieval Toolset handles official correspondence and uses AI to analyze and organize cables and record emails for each user's interests and access level. It is the closest thing in this map to a searchable negotiating history.","status":"In use.","sources":["statepb37"]},{"id":"provingground","name":"Proving Ground, Funhouse and Prompter API","short":"State build platforms","who":"U.S. Department of State","actor":"gov","region":"US","uses":["general"],"desc":"In-house environments for staff to build their own tools: Proving Ground for custom chatbots and automations on the StateChat platform, Funhouse for data science on Azure Databricks, and Prompter API for adding commercial AI to existing SBU systems.","status":"In use.","sources":["statepb37"],"links":["statechat"]},{"id":"negotiator","name":"Negot[AI]tor","who":"ADST, under State's Freedom250 initiative","actor":"research","region":"US","uses":["neg"],"desc":"Turns ADST oral histories and the Foreign Relations of the United States series into suggested negotiation strategies, so users can anticipate the other side's responses. Built for diplomatic training.","status":"Testing. Won the 2025 NFATC hackathon.","sources":["adst"]},{"id":"csis","name":"Ukraine-Russia Peace Agreement Simulator","who":"CSIS Futures Lab","actor":"research","region":"US","uses":["neg"],"desc":"Used AI-assisted content analysis of peace proposals since January 2024 to pull out 20 core negotiating items. Users build a draft deal and see satisfaction and negotiability scores for Ukraine, Russia, the U.S. and Europe. Scores come from expert surveys, with BATNA-based thresholds.","status":"Public tool. Commentary series runs February 2025 to September 2026.","sources":["csis"],"short":"CSIS peace simulator"},{"id":"genaimil","name":"GenAI.mil","who":"U.S. Department of War","actor":"gov","region":"US","uses":["general"],"desc":"Enterprise generative AI portal aimed at about 3 million military, civilian and contractor users. Gemini for Government launched first; ChatGPT Mil and Grok for Government were added on August 31, 2026. All three are cleared at Impact Level 5. Claude is absent after the Anthropic dispute.","status":"In use.","sources":["dsgenai"],"links":["google","openai","xai"]},{"id":"cdao","name":"CDAO frontier AI agreements","who":"DoW Chief Digital and AI Office","actor":"gov","region":"US","uses":["general","intel","war"],"desc":"Awards with a $200 million ceiling each to Anthropic, Google, OpenAI and xAI to build agentic workflows for warfighting, intelligence, business operations and enterprise systems.","status":"Awarded July 14, 2025.","sources":["cdao"],"links":["anthropic","google","openai","xai"],"short":"CDAO frontier awards"},{"id":"endersfoundry","name":"Ender's Foundry","who":"U.S. Department of War","actor":"gov","region":"US","uses":["war"],"desc":"Pace-setting project in the January 2026 AI strategy to speed up AI-enabled simulation and tighten feedback between simulation development and operations.","status":"Announced January 9, 2026.","sources":["dowstrat","hk"]},{"id":"agentnetwork","name":"Agent Network","who":"U.S. Department of War","actor":"gov","region":"US","uses":["war","intel"],"desc":"Pace-setting project to build AI agents for battle management and decision support, from campaign planning through execution.","status":"Announced January 9, 2026.","sources":["dowstrat","hk"]},{"id":"projectgrant","name":"Project Grant","who":"U.S. Department of War","actor":"gov","region":"US","uses":["intel"],"desc":"Intelligence pace-setting project that uses AI to make deterrence more dynamic and grounded in interpretable results.","status":"Announced January 9, 2026.","sources":["dowstrat","hk"]},{"id":"thunderforge","name":"Thunderforge","who":"Defense Innovation Unit for INDOPACOM and EUCOM","actor":"gov","region":"US","uses":["war","budget"],"desc":"AI-assisted operational planning: drafts plans and orders and wargames courses of action with comparative risk analysis using LLMs and agent-based simulation. First deployments cover campaign development, theater-wide resource allocation and strategic assessment.","status":"Prototype contract March 5, 2025.","sources":["dsthunder"],"links":["scale","anduril","microsoft"]},{"id":"advana","name":"Advana and the War Data Platform","who":"DoW CDAO and Comptroller","actor":"gov","region":"US","uses":["budget"],"desc":"A January 2026 memo split Advana into the War Data Platform, Advana for Financial Management and an application services line. The data platform is meant to be the integration layer for agentic AI. The Comptroller plans to use AI and automation to assemble audit evidence across full transaction populations.","status":"Restructuring. Clean agency-wide audit opinion targeted for FY2028.","sources":["advmemo","dsaudit"],"short":"Advana / War Data Platform"},{"id":"donovan","name":"Scale Donovan","who":"Scale AI for DoW CDAO","actor":"industry","region":"US","uses":["intel"],"desc":"Platform for mission-tailored AI agents that help analysts and operators search large volumes of unstructured data, deployed on networks up to Top Secret/SCI.","status":"$100 million, five-year agreement, September 2025.","sources":["donovan"],"links":["scale"]},{"id":"genwar","name":"GenWar Lab and GenWar Sim","who":"Johns Hopkins APL","actor":"research","region":"US","uses":["war"],"desc":"Connects LLMs to the AFSIM simulation framework so planners can describe scenarios and courses of action in plain language, with outcomes adjudicated by physics-based simulation.","status":"GenWar Lab announced October 30, 2025.","sources":["apl"],"short":"APL GenWar"},{"id":"reason","name":"REASON","who":"IARPA","actor":"gov","region":"US","uses":["intel"],"desc":"Research program for tools that point analysts to evidence they missed, including contrary evidence, and help weigh alternative explanations while they draft. It is designed to work like a grammar checker for reasoning and does not write the analysis.","status":"Research program; solicitation closed 2023.","sources":["iarpa"]},{"id":"cia","name":"CIA AI coworkers","who":"Central Intelligence Agency","actor":"gov","region":"US","uses":["intel"],"desc":"Agents inside the agency's analytic platforms to triage material, flag trends, help draft key judgments and check drafts against tradecraft standards. The CIA has produced its first AI-generated intelligence report.","status":"Announced April 9, 2026.","sources":["cia"],"short":"CIA AI coworkers"},{"id":"humphrey","name":"Humphrey suite","who":"UK government (DSIT)","actor":"gov","region":"Allies","uses":["general"],"desc":"Civil service AI tools: Consult for consultation responses, Parlex for parliamentary debate, Minute for meeting notes, Lex for legislation, and Redbox for summarising policy and drafting briefings.","status":"Launched January 21, 2025.","sources":["humphrey"]},{"id":"frontier","name":"Project FRONTIER and Taskforce RAID","who":"UK Ministry of Defence","actor":"gov","region":"Allies","uses":["war","intel"],"desc":"The Defence Investment Plan funds FRONTIER (£100m) as the enduring means for decision support across Defence at all classifications, and Taskforce RAID (£100m over four years), which includes planning automation. Land AI C2 gets £80m.","status":"Funded in the June 2026 Defence Investment Plan.","sources":["dip"],"short":"UK FRONTIER and RAID"},{"id":"natomss","name":"Maven Smart System NATO","who":"NATO (NCIA and SHAPE)","actor":"gov","region":"Allies","uses":["intel","war"],"desc":"Alliance-wide platform for intelligence fusion, targeting, situational awareness and planning, used by Allied Command Operations.","status":"Acquired March 25, 2025.","sources":["nato"],"links":["palantir"],"short":"Maven Smart System NATO"},{"id":"japan","name":"SDF command and control AI","who":"Government of Japan","actor":"gov","region":"Allies","uses":["war"],"desc":"Japan is weighing domestically developed AI at the core of the Self-Defense Forces command system, linked to U.S.-developed AI, to speed up commanders' decisions while keeping AI sovereignty.","status":"Under consideration; expected in the year-end security document update.","sources":["japan"],"short":"Japan SDF command AI"},{"id":"france","name":"Armed forces framework with Mistral","who":"French Ministry of the Armed Forces (AMIAD)","actor":"gov","region":"Allies","uses":["general"],"desc":"Lets the armed forces, directorates and bodies such as the Atomic Energy Commission use Mistral models, fine-tuned on defense data and deployed on French infrastructure.","status":"Awarded January 8, 2026.","sources":["france"],"links":["mistral"],"short":"France with Mistral"},{"id":"nbim","name":"Norges Bank Investment Management","who":"Norway's sovereign wealth fund","actor":"reference","region":"Allies","uses":["budget","neg"],"desc":"About half of 700 staff build their own tools on Claude. AI monitors 7,000 portfolio companies for risk, simulates contract negotiations, prepares company meetings and times trades. The fund plans to let agents make some decisions under human monitoring, but not yet.","status":"In use; autonomous decisions planned.","sources":["nbim"],"links":["anthropic"],"short":"Norway NBIM"},{"id":"pla","name":"PLA DeepSeek-linked tenders","who":"People's Liberation Army and affiliates","actor":"gov","region":"China","uses":["war","intel"],"desc":"DeepSeek appears in a dozen PLA-linked 2025 tenders. Xi'an Technological University claims a DeepSeek system assessed 10,000 battlefield scenarios in 48 seconds. Researchers are building imagery analysis for targeting. Reuters could not confirm deployment.","status":"Procurement and research; deployment unverified.","sources":["pla"],"links":["deepseek"],"short":"PLA DeepSeek tenders"},{"id":"prclocal","name":"Local government DeepSeek rollout","who":"PRC provincial and city governments","actor":"gov","region":"China","uses":["general"],"desc":"At least 72 provincial and city governments had deployed DeepSeek by early March 2025, mostly for citizen and business services. Zhengzhou's party chief told officials to use AI such as DeepSeek for decision-making and analysis.","status":"In use.","sources":["jamlocal","bkk"],"links":["deepseek"],"short":"PRC local governments"},{"id":"prophet","name":"PLA AI wargaming competitions","who":"CASIA, PLA National Defense University","actor":"research","region":"China","uses":["war"],"desc":"Prophet 1.0, an AI wargaming agent from the Chinese Academy of Sciences Institute of Automation, beat human teams 7-1 at an NDU-hosted forum in 2017. Human-machine wargame competitions followed in 2018.","status":"Historical baseline (2017-2018).","sources":["jamwar"],"short":"PLA AI wargaming"},{"id":"dppa","name":"Digital Dialogues and Diplomatic Pulse","who":"UN Department of Political and Peacebuilding Affairs","actor":"gov","region":"Intl","uses":["neg"],"desc":"AI-run consultations of up to 1,000 people in their own languages that surface areas of consensus on sensitive issues. Diplomatic Pulse searches member-state press releases and tracks positions.","status":"In use across special political missions.","sources":["dppa"],"short":"UN Digital Dialogues"},{"id":"walmart","name":"Walmart with Pactum","who":"Walmart","actor":"reference","region":"US","uses":["neg","budget"],"desc":"A chatbot negotiates terms with long-tail suppliers of low-volume products, and completed deals flow straight into Walmart's ERP. A low-stakes template for automated negotiation.","status":"Pilot reported 2021-2022.","sources":["csa","hbr"],"short":"Walmart with Pactum"},{"id":"anthropic","name":"Anthropic","who":"Frontier AI developer","actor":"lab","region":"US","uses":[],"desc":"Released Claude Gov models for classified national security use in June 2025. After it sought limits on mass surveillance and autonomous weapons, DoW designated it a supply-chain risk in early 2026 and ordered its products out of national security systems. A federal judge later called the designation illegal.","status":"Not on GenAI.mil.","sources":["claudegov","dsgenai"]},{"id":"openai","name":"OpenAI","who":"Frontier AI developer","actor":"lab","region":"US","uses":[],"desc":"ChatGPT Gov launched in early 2025 with the Space Force and Air Force Research Lab as first customers. ChatGPT Mil joined GenAI.mil in August 2026.","status":"In use.","sources":["claudegov","dsgenai"]},{"id":"google","name":"Google","who":"Frontier AI developer","actor":"lab","region":"US","uses":[],"desc":"Gemini for Government was the first model on GenAI.mil.","status":"In use.","sources":["dsgenai"]},{"id":"xai","name":"xAI","who":"Frontier AI developer","actor":"lab","region":"US","uses":[],"desc":"Grok for Government joined GenAI.mil through Starshield AI in August 2026.","status":"In use.","sources":["dsgenai"]},{"id":"mistral","name":"Mistral AI","who":"Frontier AI developer","actor":"lab","region":"Allies","uses":[],"desc":"French model developer serving the armed forces on French infrastructure under a January 2026 framework.","status":"In use.","sources":["france"]},{"id":"deepseek","name":"DeepSeek","who":"Frontier AI developer","actor":"lab","region":"China","uses":[],"desc":"The U.S. State Department says DeepSeek has supported China's military and intelligence operations. Estonia's foreign intelligence service found it inserts official PRC talking points into answers, including on Russia's war in Ukraine.","status":"In use across PRC government.","sources":["pla","estonia"]},{"id":"scale","name":"Scale AI","who":"Defense AI company","actor":"industry","region":"US","uses":[],"desc":"Prime on Thunderforge and supplier of Donovan agents on classified networks.","status":"In use.","sources":["dsthunder","donovan"]},{"id":"palantir","name":"Palantir","who":"Defense software integrator","actor":"industry","region":"US","uses":[],"desc":"The U.S. Army pooled dozens of contracts into an enterprise agreement worth up to $10 billion over 10 years. Supplies the Maven Smart System to NATO.","status":"In use.","sources":["palantir","nato"]},{"id":"anduril","name":"Anduril","who":"Defense tech company","actor":"industry","region":"US","uses":[],"desc":"Provides its Lattice software platform to Thunderforge.","status":"In use.","sources":["dsthunder"]},{"id":"microsoft","name":"Microsoft","who":"Technology company","actor":"industry","region":"US","uses":[],"desc":"Provides large language model technology to Thunderforge.","status":"In use.","sources":["dsthunder"]}]};
+const MATRIX = {"neg":{"US":[["premortem","State pre-mortem tool (stress-tests proposals)"],["northstar","State Northstar media analytics"],["smart","State SMART AI (cable archive)"],["negotiator","Negot[AI]tor (ADST with State; testing)"],["csis","CSIS peace agreement simulator"]],"Allies":[[null,"No dedicated foreign ministry tool found"],["nbim","NBIM simulates contract negotiations"]],"China":[[null,"None found in public sources"]],"Intl":[["dppa","UN DPPA Digital Dialogues"],["walmart","Walmart with Pactum"]]},"intel":{"US":[["cia","CIA AI coworkers"],["donovan","Scale Donovan (up to TS/SCI)"],["reason","IARPA REASON"],["projectgrant","Project Grant (deterrence)"],["northstar","State Northstar (open source)"]],"Allies":[["natomss","Maven Smart System NATO"],["frontier","UK intelligence fusion under the DIP"]],"China":[["pla","PLA imagery analysis research"]],"Intl":[[null,""]]},"war":{"US":[["thunderforge","Thunderforge (INDOPACOM, EUCOM)"],["endersfoundry","Ender's Foundry"],["agentnetwork","Agent Network"],["genwar","APL GenWar Lab"]],"Allies":[["frontier","UK FRONTIER and Taskforce RAID"],["japan","Japan SDF command AI (under consideration)"],["natomss","Maven Smart System NATO (planning)"]],"China":[["pla","DeepSeek scenario assessment (claimed)"],["prophet","CASIA Prophet wargaming agent (2017)"]],"Intl":[[null,""]]},"budget":{"US":[["advana","Advana and War Data Platform (audit)"],["thunderforge","Thunderforge (theater resource allocation)"],["premortem","State pre-mortem tool (policy stress tests)"]],"Allies":[["nbim","NBIM, state wealth fund"]],"China":[[null,"None found in public sources"]],"Intl":[["walmart","Walmart with Pactum (procurement)"]]},"general":{"US":[["statechat","StateChat (62,000+ users)"],["provingground","State build platforms"],["genaimil","GenAI.mil (3M target users)"],["cdao","CDAO frontier AI awards"]],"Allies":[["humphrey","UK Humphrey suite"],["france","French armed forces with Mistral"]],"China":[["prclocal","DeepSeek in 72+ local governments"]],"Intl":[[null,""]]}};
+const PATTERNS = [{"h":"General-purpose assistants have the widest reach","segs":["StateChat has over 62,000 users at 98% of posts as of June 2026, with about 19,000 using it weekly out of an 80,000-person workforce (",{"t":"State Generative AI Playbook, pp. 3, 28, 33","s":"statepb"},"). The same playbook gives 60,000 users at 92% of posts in its epilogue (",{"t":"p. 34","s":"statepb34"},"), so we should cite the range. GenAI.mil is aimed at about 3 million people (",{"t":"DefenseScoop, August 31, 2026","s":"dsgenai"},")."]},{"h":"State is the one foreign ministry we found moving toward negotiation work","segs":["The playbook names \"negotiations and policy analysis\" as StateChat's next step and describes a pre-mortem tool that stress-tests policy proposals (",{"t":"State Generative AI Playbook, p. 28","s":"statepb28"},"). It also lists Northstar for global media and SMART AI for the cable archive (",{"t":"State Generative AI Playbook, pp. 37-38","s":"statepb37"},"). Outside State, negotiation support is still at the training or prototype stage: ",{"t":"Negot[AI]tor","s":"adst"}," is in testing, and the ",{"t":"CSIS simulator","s":"csis"}," draws its scores from expert surveys."]},{"h":"Verification cost is already the main complaint","segs":["Regular StateChat users who see no benefit say checking outputs takes longer than doing the task themselves (",{"t":"State Generative AI Playbook, p. 34","s":"statepb34"},"). That is early evidence for our question on keeping people in charge without making them redo the work."]},{"h":"Defense money is going into planning and simulation","segs":[{"t":"Thunderforge","s":"dsthunder"},", ",{"t":"Ender's Foundry","s":"hk"},", ",{"t":"APL's GenWar","s":"apl"}," and the UK's ",{"t":"Project FRONTIER (Defence Investment Plan, pp. 33-34)","s":"dip"}," all aim at drafting plans and wargaming courses of action. Thunderforge is the only government program we found that names resource allocation as an early use."]},{"h":"Public-finance AI is mostly data and audit work so far","segs":["The ",{"t":"Advana restructuring memo","s":"advmemo"}," targets a clean FY2028 audit and an AI-ready data layer. Nothing public uses AI to compare investment options across civilian programs. The closest state analog is ",{"t":"Norway's wealth fund","s":"nbim"},", which uses Claude across half its staff and still keeps people making the decisions."]},{"h":"Dependence on a few providers is already a live problem","segs":["GenAI.mil runs on Google, OpenAI and xAI. Anthropic was ordered out of national security systems after a dispute over use limits, then won in court (",{"t":"DefenseScoop, August 31, 2026","s":"dsgenai"},"). ",{"t":"France","s":"france"}," and ",{"t":"Japan","s":"japan"}," are building model sovereignty in from the start. This speaks directly to our security-risk question."]},{"h":"Evidence on China is thinner and leans on claims","segs":[{"t":"Reuters","s":"pla"}," found DeepSeek in a dozen PLA-linked tenders but could not confirm deployment. ",{"t":"Local officials","s":"bkk"}," have been told to use DeepSeek for decisions. ",{"t":"Estonia's foreign intelligence service","s":"estonia"}," found DeepSeek inserts official PRC talking points, which matters if Chinese decision support runs on it."]},{"h":"Gaps to close next","segs":["Against our framing, the empty spots are the after-talks phase (compliance and learning) and portfolio-level stress tests for budgets. Before the week 2 use-case list, we should ask State how the pre-mortem tool is used, check allied foreign ministries (FCDO, Germany's Federal Foreign Office, Japan's MOFA, Singapore's MFA) and the PRC foreign ministry, and confirm whether Thunderforge has moved past prototype. Classified programs are invisible in this map."]}];
+const FRAMING = [{"group":"Negotiation related to diplomacy and conflict","rows":[{"stage":"Before talks","ask":"The other side's interests, red lines, domestic politics and negotiating history","items":["premortem","northstar","smart","negotiator","csis","dppa","nbim"],"gap":"Pieces exist but sit apart: history (SMART, Negot[AI]tor), public signals (Northstar) and proposal stress tests (pre-mortem). Nothing found joins them into one prep workflow."},{"stage":"During talks","ask":"Reading signals, testing proposals, tracking concessions","items":["northstar","csis","walmart"],"gap":"Only Walmart's bot works live inside a negotiation, and only on low-stakes supplier terms. No government tool found for tracking concessions."},{"stage":"After talks","ask":"Checking compliance and learning from outcomes","items":[],"gap":"Nothing found that is built for this. Intelligence platforms such as Maven Smart System NATO could monitor compliance, but none is described that way."}]},{"group":"Resource allocation and investment","rows":[{"stage":"Forecasting","ask":"Costs, returns and risks","items":["nbim"],"gap":"NBIM monitors 7,000 holdings for risk. No government budget forecasting tool found."},{"stage":"Comparing options","ask":"Comparing options across programs","items":["thunderforge"],"gap":"Thunderforge compares courses of action, including theater resource allocation. Nothing found that compares civilian or cross-department programs."},{"stage":"Stress-testing","ask":"Stress-testing a portfolio against scenarios","items":["premortem","genwar"],"gap":"State's pre-mortem tool tests single proposals and GenWar tests military plans. No portfolio-level stress test found."},{"stage":"Tracking delivery","ask":"What was promised against what was delivered","items":["advana"],"gap":"Advana is building this for defense audit. Nothing found outside DoW."}]}];
+
+const S = DATA.sources;
+const byId = new Map(DATA.nodes.map(n => [n.id, n]));
+const useName = Object.fromEntries(DATA.uses.map(u => [u.id, u.name]));
+const regionName = Object.fromEntries(DATA.regions.map(r => [r.id, r.name]));
+const actorName = Object.fromEntries(DATA.actors.map(a => [a.id, a.name]));
+const actorVar = id => `var(--c-${id})`;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+document.getElementById('asof').textContent = DATA.asOf;
+
+// ---- graph data
+const nodes = [
+  ...DATA.uses.map(u => ({ id: 'use:' + u.id, name: u.name, hub: true, use: u.id })),
+  ...DATA.nodes.map(n => ({ ...n }))
+];
+const links = [];
+DATA.nodes.forEach(n => {
+  n.uses.forEach(u => links.push({ source: n.id, target: 'use:' + u, kind: 'use' }));
+  (n.links || []).forEach(p => links.push({ source: n.id, target: p, kind: 'provider' }));
+});
+const deg = {};
+links.forEach(l => { deg[l.source] = (deg[l.source] || 0) + 1; deg[l.target] = (deg[l.target] || 0) + 1; });
+nodes.forEach(n => n.r = n.hub ? 15 + Math.sqrt(deg[n.id] || 1) * 2.2 : 6 + Math.sqrt(deg[n.id] || 1) * 2.4);
+
+// ---- filters
+const state = { regions: new Set(DATA.regions.map(r => r.id)), actors: new Set(DATA.actors.map(a => a.id)), q: '', mode: 'use', sel: null };
+function chips(container, items, set, dot) {
+  const el = document.getElementById(container);
+  items.forEach(it => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.setAttribute('aria-pressed', 'true');
+    b.innerHTML = (dot ? `<span class="dot" style="background:${actorVar(it.id)}"></span>` : '') + esc(it.name);
+    b.onclick = () => { set.has(it.id) ? set.delete(it.id) : set.add(it.id); b.setAttribute('aria-pressed', set.has(it.id)); applyFilter(); };
+    el.appendChild(b);
+  });
+}
+chips('regions', DATA.regions, state.regions, false);
+chips('actors', DATA.actors, state.actors, true);
+
+const visible = n => n.hub || (state.regions.has(n.region) && state.actors.has(n.actor));
+const matches = n => !state.q || (n.name + ' ' + (n.who || '') + ' ' + (n.desc || '')).toLowerCase().includes(state.q);
+
+// ---- svg
+const svg = d3.select('#svg');
+const stage = document.getElementById('stage');
+let W = stage.clientWidth, H = stage.clientHeight;
+const root = svg.append('g');
+const zoom = d3.zoom().scaleExtent([0.4, 3]).on('zoom', e => root.attr('transform', e.transform));
+svg.call(zoom).on('dblclick.zoom', null);
+const linkSel = root.append('g').selectAll('line').data(links).join('line').attr('class', d => 'link' + (d.kind === 'provider' ? ' provider' : ''));
+const nodeSel = root.append('g').selectAll('g').data(nodes, d => d.id).join('g')
+  .attr('class', d => 'node' + (d.hub ? ' hub' : ''))
+  .attr('tabindex', 0).attr('role', 'button').attr('aria-label', d => d.name);
+nodeSel.append('circle').attr('r', d => d.r).attr('fill', d => d.hub ? null : actorVar(d.actor));
+nodeSel.append('text').text(d => d.short || d.name).attr('x', d => d.hub ? 0 : d.r + 4).attr('y', d => d.hub ? -d.r - 6 : 4).attr('text-anchor', d => d.hub ? 'middle' : 'start');
+
+// anchor positions
+function useAnchors() {
+  const cx = W / 2, cy = H / 2 + 20, Rx = W * 0.37, Ry = H * 0.33;
+  const ids = DATA.uses.map(u => u.id);
+  return Object.fromEntries(ids.map((id, i) => { const a = -Math.PI / 2 + i * 2 * Math.PI / ids.length; return [id, [cx + Rx * Math.cos(a), cy + Ry * Math.sin(a)]]; }));
+}
+function regionAnchors() {
+  const ids = DATA.regions.map(r => r.id);
+  return Object.fromEntries(ids.map((id, i) => [id, [W * (i + 0.5) / ids.length, H * 0.55]]));
+}
+function target(d) {
+  if (state.mode === 'region') {
+    const A = regionAnchors();
+    if (d.hub) { const i = DATA.uses.findIndex(u => u.id === d.use); return [W * (i + 0.5) / DATA.uses.length, H * 0.1]; }
+    return A[d.region];
+  }
+  const A = useAnchors();
+  if (d.hub) return A[d.use];
+  if (d.uses.length) { const pts = d.uses.map(u => A[u]); const k = pts.length === 1 ? 0.6 : 0.85; return [d3.mean(pts, p => p[0]) * k + W / 2 * (1 - k), d3.mean(pts, p => p[1]) * k + H / 2 * (1 - k)]; }
+  return [W / 2, H / 2];
+}
+const sim = d3.forceSimulation(nodes)
+  .force('link', d3.forceLink(links).id(d => d.id).distance(l => l.kind === 'provider' ? 60 : 75).strength(l => l.kind === 'provider' ? 0.35 : 0.12))
+  .force('charge', d3.forceManyBody().strength(d => d.hub ? -240 : -170))
+  .force('collide', d3.forceCollide(d => d.r + (d.hub ? 22 : 13)))
+  .force('x', d3.forceX(d => target(d)[0]).strength(d => d.hub ? 0.5 : 0.08))
+  .force('y', d3.forceY(d => target(d)[1]).strength(d => d.hub ? 0.5 : 0.08))
+  .on('tick', () => {
+    nodes.forEach(d => { d.x = Math.max(20, Math.min(W - 20, d.x)); d.y = Math.max(d.hub ? 44 : 22, Math.min(H - 40, d.y)); });
+    nodeSel.select('text').filter(d => !d.hub).attr('text-anchor', d => d.x > W * 0.7 ? 'end' : 'start').attr('x', d => d.x > W * 0.7 ? -(d.r + 4) : d.r + 4);
+    linkSel.attr('x1', d => d.source.x).attr('y1', d => d.source.y).attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    nodeSel.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+if (reduce) { sim.stop(); for (let i = 0; i < 300; i++) sim.tick(); sim.on('tick')(); }
+
+nodeSel.call(d3.drag()
+  .on('start', (e, d) => { if (!e.active && !reduce) sim.alphaTarget(0.25).restart(); d.fx = d.x; d.fy = d.y; })
+  .on('drag', (e, d) => { d.fx = e.x; d.fy = e.y; if (reduce) { d.x = e.x; d.y = e.y; sim.on('tick')(); } })
+  .on('end', (e, d) => { if (!e.active) sim.alphaTarget(0); d.fx = null; d.fy = null; }));
+
+// ---- interaction
+const neighbors = id => { const s = new Set([id]); links.forEach(l => { if (l.source.id === id) s.add(l.target.id); if (l.target.id === id) s.add(l.source.id); }); return s; };
+function highlight(id) {
+  if (!id) { nodeSel.classed('dim', d => !visible(d) || !matches(d)); linkSel.classed('dim', l => !visible(l.source) || !visible(l.target)).classed('hot', false); return; }
+  const nb = neighbors(id);
+  nodeSel.classed('dim', d => !nb.has(d.id) || !visible(d));
+  linkSel.classed('dim', l => !(l.source.id === id || l.target.id === id)).classed('hot', l => l.source.id === id || l.target.id === id);
+}
+nodeSel.on('mouseenter', (e, d) => highlight(d.id)).on('mouseleave', () => highlight(state.sel))
+  .on('click', (e, d) => select(d.id))
+  .on('keydown', (e, d) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(d.id); } });
+svg.on('click', e => { if (e.target === svg.node()) select(null); });
+
+function applyFilter() {
+  nodeSel.style('display', d => visible(d) ? null : 'none');
+  linkSel.style('display', l => visible(l.source) && visible(l.target) ? null : 'none');
+  if (state.sel && !visible(byId.get(state.sel) || {})) select(null); else highlight(state.sel);
+}
+document.getElementById('q').addEventListener('input', e => { state.q = e.target.value.trim().toLowerCase(); if (!state.sel) highlight(null); const hit = state.q && nodes.filter(n => !n.hub && visible(n) && matches(n)); if (hit && hit.length === 1) select(hit[0].id); });
+function setMode(m) {
+  state.mode = m;
+  document.getElementById('by-use').setAttribute('aria-pressed', m === 'use');
+  document.getElementById('by-region').setAttribute('aria-pressed', m === 'region');
+  sim.force('x').x(d => target(d)[0]); sim.force('y').y(d => target(d)[1]);
+  sim.alpha(0.9).restart(); if (reduce) { sim.stop(); for (let i = 0; i < 300; i++) sim.tick(); sim.on('tick')(); }
+}
+document.getElementById('by-use').onclick = () => setMode('use');
+document.getElementById('by-region').onclick = () => setMode('region');
+document.getElementById('reset').onclick = () => svg.transition().duration(reduce ? 0 : 400).call(zoom.transform, d3.zoomIdentity);
+
+// ---- panel
+const panel = document.getElementById('panel');
+const cite = k => { const s = S[k]; return `<li><a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>. ${esc(s.outlet)}, ${esc(s.date)}${s.pages ? ', ' + esc(s.pages) : ''}.</li>`; };
+function linkBtn(id) { const n = id.startsWith('use:') ? { name: useName[id.slice(4)] } : byId.get(id); return `<button type="button" data-go="${esc(id)}">${esc(n.name)}</button>`; }
+function renderPanel() {
+  const id = state.sel;
+  if (!id) {
+    panel.innerHTML = `<div class="eyebrow">Details</div><h3>Pick a node</h3><p class="empty">Click any program, provider or use-case in the network, or a name in the table below. ${DATA.nodes.filter(n => n.uses.length).length} programs and ${DATA.nodes.filter(n => !n.uses.length).length} providers are mapped across ${DATA.uses.length} use-cases.</p>`;
+    return;
+  }
+  if (id.startsWith('use:')) {
+    const u = id.slice(4);
+    const progs = DATA.nodes.filter(n => n.uses.includes(u));
+    panel.innerHTML = `<div class="eyebrow">Use-case</div><h3>${esc(useName[u])}</h3><p>${progs.length} programs in this map serve this use-case.</p><div class="links"><ul>${progs.map(n => `<li>${linkBtn(n.id)} <span class="who">· ${esc(regionName[n.region])}</span></li>`).join('')}</ul></div>`;
+  } else {
+    const n = byId.get(id);
+    const rel = links.filter(l => l.source.id === id || l.target.id === id).map(l => l.source.id === id ? l.target.id : l.source.id);
+    panel.innerHTML = `<div class="eyebrow">${esc(actorName[n.actor])}</div><h3>${esc(n.name)}</h3><p class="who">${esc(n.who)} · ${esc(regionName[n.region])}</p>
+      <p>${esc(n.desc)}</p>
+      <p class="status"><b>Status.</b> ${esc(n.status)}</p>
+      ${rel.length ? `<div class="links"><span class="eyebrow">Connected to</span><ul>${rel.map(r => `<li>${linkBtn(r)}</li>`).join('')}</ul></div>` : ''}
+      <div style="margin-top:12px"><span class="eyebrow">Sources</span><ul>${n.sources.map(cite).join('')}</ul></div>`;
+  }
+  panel.querySelectorAll('[data-go]').forEach(b => b.onclick = () => select(b.dataset.go));
+}
+function select(id) {
+  state.sel = id;
+  nodeSel.classed('sel', d => d.id === id);
+  highlight(id); renderPanel();
+}
+renderPanel();
+
+// ---- matrix
+const cols = [['US', 'United States'], ['Allies', 'Allies and partners'], ['China', 'China'], ['Intl', 'International and private analogs']];
+document.getElementById('matrix').innerHTML = `<thead><tr><th>Use-case</th>${cols.map(c => `<th>${c[1]}</th>`).join('')}</tr></thead><tbody>` +
+  DATA.uses.map(u => `<tr><td>${esc(u.name)}</td>${cols.map(c => `<td>${(MATRIX[u.id][c[0]] || []).map(([id, label]) => id ? `<button type="button" data-node="${id}">${esc(label)}</button>` : (label ? `<span class="none">${esc(label)}</span>` : '')).join('')}</td>`).join('')}</tr>`).join('') + '</tbody>';
+document.querySelectorAll('[data-node]').forEach(b => b.onclick = () => { select(b.dataset.node); document.getElementById('map-h').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); });
+
+// ---- framing
+document.getElementById('framing').innerHTML = '<thead><tr><th>Where AI could help</th><th>What our plan asks</th><th>Tools that fit</th><th>What is missing</th></tr></thead><tbody>' +
+  FRAMING.map(g => `<tr class="grp"><td colspan="4">${esc(g.group)}</td></tr>` + g.rows.map(r => `<tr class="${r.items.length ? '' : 'empty'}"><td>${esc(r.stage)}</td><td class="ask">${esc(r.ask)}</td><td>${r.items.length ? r.items.map(id => `<button type="button" data-node="${id}">${esc(byId.get(id).short || byId.get(id).name)}</button>`).join('') : '<span class="none">None found</span>'}</td><td class="gap">${esc(r.gap)}</td></tr>`).join('')).join('') + '</tbody>';
+document.querySelectorAll('#framing [data-node]').forEach(b => b.onclick = () => { select(b.dataset.node); document.getElementById('map-h').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' }); });
+
+// ---- patterns
+document.getElementById('patterns').innerHTML = PATTERNS.map(p => `<article><h3>${esc(p.h)}</h3><p>${p.segs.map(s => typeof s === 'string' ? esc(s) : `<a href="${esc(S[s.s].url)}" target="_blank" rel="noopener">${esc(s.t)}</a>`).join('')}</p></article>`).join('');
+
+// ---- sources
+const byUrl = new Map();
+Object.values(S).forEach(x => { const e = byUrl.get(x.url); if (e) { if (x.pages) e.pl.push(x.pages); } else byUrl.set(x.url, { ...x, pl: x.pages ? [x.pages] : [] }); });
+const pagesOf = e => { const set = new Set(); e.pl.forEach(p => p.replace(/^pp?\. /, '').split(', ').forEach(q => set.add(q))); const arr = [...set].sort((a, b) => parseInt(a) - parseInt(b)); return arr.length ? (arr.length === 1 && !arr[0].includes('-') ? 'p. ' : 'pp. ') + arr.join(', ') : ''; };
+document.getElementById('sources').innerHTML = [...byUrl.values()].sort((a, b) => a.outlet.localeCompare(b.outlet) || a.title.localeCompare(b.title)).map(s => { const pg = pagesOf(s); return `<li><span class="o">${esc(s.outlet)},</span> <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.title)}</a>, ${esc(s.date)}${pg ? ', ' + pg : ''}.</li>`; }).join('');
+
+// ---- resize
+new ResizeObserver(() => { const w = stage.clientWidth, h = stage.clientHeight; if (Math.abs(w - W) > 4 || Math.abs(h - H) > 4) { W = w; H = h; setMode(state.mode); } }).observe(stage);
+</script>
+
+</body>
+</html>
